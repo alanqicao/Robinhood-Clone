@@ -1,22 +1,52 @@
-import React,{useState, useEffect} from 'react'
-import './Stats.css'
-import axios from 'axios'
-import StatsRow from './StatsRow'
+import React,{useState, useEffect} from 'react';
+import './Stats.css';
+import axios from 'axios';
+import StatsRow from './StatsRow';
+import {db} from './fireBase';
+import {key} from './api'
 function Stats() {
 
     const [stockData, setstockData] = useState([]);
-    const TOKEN = "c04j48n48v6u76cjohu0";
+    const KEY_URL = `&token=${key}`;
     const BASE_URL = "https://finnhub.io/api/v1/quote?symbol=";
+
+    const [myStocks, setmyStocks] =useState([]);
+
+    const getMyStocks = () =>{
+      db
+      .collection('myStocks')
+      .onSnapshot(snapshot =>{
+        console.log(snapshot.docs)
+        let promises = [];
+        let tempData = [];
+        snapshot.docs.map((doc)=>{
+          promises.push(getStockData(doc.data().ticker)
+          .then(res =>{
+            tempData.push({
+              id:doc.id,
+              data: doc.data(),
+              info: res.data
+            })
+          })
+          )
+        })
+        Promise.all(promises).then(()=>{
+          console.log(tempData)
+          setmyStocks(tempData);
+        })
+      })
+    };
 
     const getStockData = (stock) =>{
       return axios
-        .get(`${BASE_URL}${stock}&token=${TOKEN}`)
+        .get(`${BASE_URL}${stock}${KEY_URL}`)
         .catch((error)=>{
           console.log("Error",error.message);
         })
     }
 
     useEffect(() => {
+      getMyStocks();
        let tempStocksData =[];
         const stocksList = ["AAPL","MSFT","TSLA","FB","BABA","UBER","DIS","SBUX"];
 
@@ -27,6 +57,7 @@ function Stats() {
             getStockData(stock)
             .then((res)=>{
               tempStocksData.push({
+
                 name:stock,
                 ...res.data
               });
@@ -35,6 +66,7 @@ function Stats() {
         });
 
         Promise.all(promises).then(()=>{
+         
             setstockData(tempStocksData);
         })
 
@@ -49,19 +81,20 @@ function Stats() {
         </div>
         <div className="stats__content">
           <div className="stats__rows">
-          {/* {stockData.map((stock)=>{
+          {myStocks.map((stock)=>(
                 <StatsRow
                   key={stock.data.ticker}
                   name={stock.data.ticker}
                   openPrice={stock.info.o}
-                  volume={stock.data.shares}
+                  shares={stock.data.shares}
                   price={stock.info.c}
                 />
-              })} */}
+              ))} 
+             
           </div>
         </div>
 
-        <div className="stats__header">
+        <div className="stats__header stats__lists">
           <p>Lists</p>
 
         </div>

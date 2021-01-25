@@ -1,5 +1,6 @@
 import React from 'react'
 import Logo from './robinhood.svg';
+import SearchOutlined from "@material-ui/icons/SearchOutlined";
 import './Header.css'
 
 function Header() {
@@ -11,6 +12,7 @@ function Header() {
       {/* {search} */}
         <div className="header__search">
           <div className="header__searchContainer">
+          <SearchOutlined />
             <input placeholder="Search" type="text"/>
           </div>
         </div>
